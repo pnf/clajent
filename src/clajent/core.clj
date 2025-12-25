@@ -1,6 +1,7 @@
 (ns clajent.core
   (:require    [clojure.data.json :as json]
-               [clajent.secrets :as secrets])
+               [clajent.secrets :as secrets]                ;; should define token
+               )
   (:import [com.openai.client.okhttp OpenAIOkHttpClient]
            [com.openai.core JsonValue ObjectMappers]
            [com.openai.models.responses Response ResponseCreateParams ResponseCreateParams$Builder ResponseCreateParams$Input ResponseFunctionToolCall
