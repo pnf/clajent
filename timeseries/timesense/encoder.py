@@ -7,7 +7,7 @@ Inspired by TimeSense's <ts> token approach
 import numpy as np
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-from .preprocessing import TimeSeriesData, SegmentFeatures
+from preprocessing import TimeSeriesData, SegmentFeatures
 
 
 @dataclass
@@ -66,7 +66,7 @@ class TimeSeriesEncoder:
         lines = ["<ts>"]
         for idx, val, ts in zip(indices, values, timestamps):
             if include_timestamps:
-                ts_str = pd.Timestamp(ts).isoformat() if hasattr(ts, '__iter__') else str(ts)
+                ts_str = pd.Timestamp(str(ts)).isoformat() if hasattr(ts, '__iter__') else str(ts)
                 line = f"{series.name} {idx} {ts_str} {val:.4f}"
             else:
                 line = f"{series.name} {idx} {val:.4f}"

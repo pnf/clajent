@@ -10,16 +10,18 @@ import logging
 from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
-
+logging
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 from pydantic import BaseModel, Field
+from anthropic import Anthropic
+from ignore_me_secrets import ANTHROPIC_KEY
 
-from .preprocessing import TimeSeriesData, TimeSeriesPreprocessor
-from .encoder import TimeSeriesEncoder, create_task_specific_encoding
-from .prompts import PromptBuilder, TaskType, ResponseParser
-from .verification import TimeSeriesVerifier
+from preprocessing import TimeSeriesData, TimeSeriesPreprocessor
+from encoder import TimeSeriesEncoder, create_task_specific_encoding
+from prompts import PromptBuilder, TaskType, ResponseParser
+from verification import TimeSeriesVerifier
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -392,36 +394,17 @@ Analyzes similarities, differences, and intervals of divergence.""",
         else:
             return "describe"
 
-    async def _call_llm(self, prompt: str) -> str:
-        """
-        Call LLM API (placeholder - implement with actual Anthropic API)
+    client = Anthropic(api_key=ANTHROPIC_KEY)
 
-        In production, use the Anthropic API:
-        ```python
-        from anthropic import Anthropic
-        client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-        message = client.messages.create(
+    async def _call_llm(self, prompt: str) -> str:
+        message = self.client.messages.create(
             model="claude-sonnet-4-5-20250929",
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
-        return message.content[0].text
-        ```
-        """
-        # Placeholder response
         logger.info(f"LLM Prompt (first 200 chars): {prompt[:200]}...")
 
-        return """Based on the time series analysis:
-
-The series shows an overall increasing trend with moderate volatility.
-Key observations:
-- Maximum value: approximately 67.82 at index 145
-- Notable spike detected at index 207
-- Change point identified around index 112 where the trend accelerates
-- The series can be segmented into 3 main phases: initial rise, plateau, and final acceleration
-
-Overall trend: increase
-Confidence: high"""
+        return  message.content[0].text
 
     def _parse_response(self, response: str, task_type: TaskType) -> Dict:
         """Parse LLM response based on task type"""

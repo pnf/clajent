@@ -1,9 +1,16 @@
 """
 Basic usage examples for TimeSense MCP server
 """
+from readline import clear_history
 
 import numpy as np
 from datetime import datetime, timedelta
+import ts_server as tss
+import asyncio
+from anthropic import Anthropic
+from ignore_me_secrets import ANTHROPIC_KEY
+import json
+import logging
 
 
 def generate_sample_data():
@@ -76,13 +83,17 @@ EXAMPLE_REQUESTS = {
     },
 
     "segment_series": {
-        "series": generate_sample_data()[2],
+        "series": [generate_sample_data()[2]],
+        "question": "Segment this time series into distinct phases.",
+        "task_type": "segment",
+        "verify": True,
         "window_size": 20
     },
 
     "compare_series": {
-        "series_a": generate_sample_data()[0],
-        "series_b": generate_sample_data()[1],
+        "series" : [generate_sample_data()[0], generate_sample_data()[1]],
+        "question": "Compare the behavior of these two time series.",
+
         "aspect": "trends and volatility"
     },
 
@@ -116,6 +127,39 @@ def print_example_requests():
         print(json.dumps(request, indent=2))
         print("```\n")
 
+logger = logging.getLogger(__name__)
+
+server = tss.TimeSeriesMCPServer()
+
+client = Anthropic(api_key=ANTHROPIC_KEY)
+async def get_llm_response(input):
+    # check if input dict contains "question"
+    if "question" in input:
+        prompt = input["question"]
+        del input["question"]
+    else:
+        prompt = "Analyze the following time series data:"
+
+    prompt = f"{prompt}:\n\n{json.dumps(input, indent=2)}"
+
+    message = await client.beta.messages.create(
+        model="claude-sonnet-4-5-20250929",
+        max_tokens=2048,
+        mcp_servers = [server],
+        messages=[{"role": "user", "content": prompt}]
+    )
+    logger.info(f"LLM Prompt (first 200 chars): {prompt[:200]}...")
+    return message.choices[0].message.content
+
+def run_example_requests():
+    for name, request in EXAMPLE_REQUESTS.items():
+        print(f"## {name}\n")
+        res = asyncio.run(get_llm_response(request))
+        print(res)
+
+def get_example_requests():
+    """Get example request by name"""
+    return EXAMPLE_REQUESTS
 
 if __name__ == "__main__":
-    print_example_requests()
+    run_example_requests()

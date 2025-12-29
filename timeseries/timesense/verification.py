@@ -6,7 +6,7 @@ External "Temporal Sense" validation - verifies LLM outputs against numerical co
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from .preprocessing import TimeSeriesData
+from preprocessing import TimeSeriesData
 
 
 @dataclass
@@ -233,7 +233,7 @@ class TimeSeriesVerifier:
         Returns:
             VerificationResult
         """
-        from .preprocessing import TimeSeriesPreprocessor
+        from preprocessing import TimeSeriesPreprocessor
 
         # Compute ground truth change points
         preprocessor = TimeSeriesPreprocessor()
