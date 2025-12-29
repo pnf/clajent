@@ -15,8 +15,8 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 from pydantic import BaseModel, Field
-from anthropic import Anthropic
-from ignore_me_secrets import ANTHROPIC_KEY
+from openai import AsyncOpenAI
+from ignore_me_secrets import OPEN_ROUTER_KEY
 
 from preprocessing import TimeSeriesData, TimeSeriesPreprocessor
 from encoder import TimeSeriesEncoder, create_task_specific_encoding
@@ -394,17 +394,17 @@ Analyzes similarities, differences, and intervals of divergence.""",
         else:
             return "describe"
 
-    client = Anthropic(api_key=ANTHROPIC_KEY)
+    client = AsyncOpenAI(api_key=OPEN_ROUTER_KEY, base_url="https://openrouter.ai/api/v1")
 
     async def _call_llm(self, prompt: str) -> str:
-        message = self.client.messages.create(
-            model="claude-sonnet-4-5-20250929",
+        response = await self.client.chat.completions.create(
+            model="gpt-4o",
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
         logger.info(f"LLM Prompt (first 200 chars): {prompt[:200]}...")
 
-        return  message.content[0].text
+        return response.choices[0].message.content
 
     def _parse_response(self, response: str, task_type: TaskType) -> Dict:
         """Parse LLM response based on task type"""

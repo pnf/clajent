@@ -7,8 +7,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import ts_server as tss
 import asyncio
-from anthropic import Anthropic
-from ignore_me_secrets import ANTHROPIC_KEY
+from openai import OpenAI, AsyncOpenAI
+from ignore_me_secrets import OPEN_ROUTER_KEY
 import json
 import logging
 
@@ -131,7 +131,7 @@ logger = logging.getLogger(__name__)
 
 server = tss.TimeSeriesMCPServer()
 
-client = Anthropic(api_key=ANTHROPIC_KEY)
+client = AsyncOpenAI(api_key=OPEN_ROUTER_KEY, base_url="https://openrouter.ai/api/v1")
 async def get_llm_response(input):
     # check if input dict contains "question"
     if "question" in input:
@@ -142,14 +142,15 @@ async def get_llm_response(input):
 
     prompt = f"{prompt}:\n\n{json.dumps(input, indent=2)}"
 
-    message = await client.beta.messages.create(
-        model="claude-sonnet-4-5-20250929",
+    # Note: OpenAI doesn't have native MCP integration like Anthropic
+    # This now uses standard OpenAI API
+    response = client.chat.completions.create(
+        model="gpt-4o",
         max_tokens=2048,
-        mcp_servers = [server],
         messages=[{"role": "user", "content": prompt}]
     )
     logger.info(f"LLM Prompt (first 200 chars): {prompt[:200]}...")
-    return message.choices[0].message.content
+    return response.choices[0].message.content
 
 def run_example_requests():
     for name, request in EXAMPLE_REQUESTS.items():
