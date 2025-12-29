@@ -1,6 +1,7 @@
 (ns clajent.core
   (:require    [clojure.data.json :as json]
-               [clajent.secrets :as secrets]                ;; should define token
+               [clajent.secrets :as secrets]
+               [gigasquid.plot :as gplot]
                )
   (:import [com.openai.client.okhttp OpenAIOkHttpClient]
            [com.openai.core JsonValue ObjectMappers]
@@ -10,7 +11,6 @@
            [com.openai.models Reasoning Reasoning$Summary Reasoning$Summary$Companion ReasoningEffort]
            (java.util Optional))
   )
-
 
 (def client (.. OpenAIOkHttpClient (builder)
                 (apiKey secrets/open-router-token)

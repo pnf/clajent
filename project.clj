@@ -8,5 +8,6 @@
                  [com.openai/openai-java "4.8.0"]
                  [org.clojure/data.json "2.5.1"]
                  [clj-http "3.13.0"]
+                 [clj-python/libpython-clj "2.026"]
                  ]
   :repl-options {:init-ns clajent.core})
