@@ -7,6 +7,8 @@ pom.xml.asc
 *ignore_me*
 *.jar
 *.class
+/venv
+/.venv
 /.clj-kondo
 /.lein-*
 /.nrepl-port

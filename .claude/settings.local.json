@@ -5,7 +5,18 @@
       "Bash(python:*)",
       "Bash(timeout 60 python:*)",
       "Bash(cat:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Skill(clojure-eval)",
+      "Bash(javac:*)",
+      "Bash(/opt/homebrew/bin/bb:*)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" clj-nrepl-eval:*)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" clj-nrepl-eval -p 49644 \"\\(ts/plot-timeseries [1640000000000 1640000060000 1640000120000] [\"\"Series A\"\" \"\"Series B\"\"] [[10 20 30] [50 60 70]] {:output :bytes :width 400 :height 300}\\)\")",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" clj-nrepl-eval -p 49644 \"\\(ts/plot-timeseries [1640000000000 1640003600000 1640007200000] [\"\"Series A\"\" \"\"Series B\"\"] [[10 20 30] [50 60 70]] {:output {:file \"\"/tmp/test-utc.png\"\"} :combined true :width 800 :height 600}\\)\")",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" clj-nrepl-eval -p 51198 \"\\(ts/plot-timeseries [1640000000000 1640003600000 1640007200000] [\"\"Series A\"\" \"\"Series B\"\"] [[10 20 30] [50 60 70]] {:output {:file \"\"/tmp/test-utc.png\"\"} :combined true :width 800 :height 600}\\)\")"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }
