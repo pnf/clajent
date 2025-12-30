@@ -87,6 +87,7 @@ class TimeSeriesMCPServer:
 
         @self.server.list_tools()
         async def list_tools() -> list[Tool]:
+            logger.info("list_tools called")
             """List available time series analysis tools"""
             return [
                 Tool(
@@ -131,6 +132,7 @@ Analyzes similarities, differences, and intervals of divergence.""",
 
         @self.server.call_tool()
         async def call_tool(name: str, arguments: Any) -> list[TextContent]:
+            logger.info(f"call_tool called: {name}")
             """Handle tool calls"""
             try:
                 if name == "analyze_time_series":
@@ -162,6 +164,7 @@ Analyzes similarities, differences, and intervals of divergence.""",
         )
 
     async def _analyze_time_series(self, arguments: Dict) -> list[TextContent]:
+        logger.info(f"_analyze_time_series called: {arguments}")
         """Main time series analysis tool"""
         args = AnalyzeTimeSeriesInput(**arguments)
 
@@ -230,6 +233,7 @@ Analyzes similarities, differences, and intervals of divergence.""",
         return [TextContent(type="text", text=output)]
 
     async def _describe_segments(self, arguments: Dict) -> list[TextContent]:
+        logger.info(f"_describe_segments called: {arguments}")
         """Segment and describe time series"""
         args = DescribeSegmentsInput(**arguments)
 
@@ -264,9 +268,12 @@ Analyzes similarities, differences, and intervals of divergence.""",
             output += f"- Slope: {seg.slope:+.6f}\n"
             output += f"- Range: [{seg.min_val:.4f}, {seg.max_val:.4f}]\n\n"
 
+        logger.info(output)
+
         return [TextContent(type="text", text=output)]
 
     async def _detect_anomalies(self, arguments: Dict) -> list[TextContent]:
+        logger.info(f"_detect_anomalies called: {arguments}")
         """Detect anomalies in time series"""
         args = DetectAnomaliesInput(**arguments)
 
@@ -320,9 +327,12 @@ Analyzes similarities, differences, and intervals of divergence.""",
         output += "## LLM Analysis\n\n"
         output += llm_response
 
+        logger.info(output)
+
         return [TextContent(type="text", text=output)]
 
     async def _compare_series(self, arguments: Dict) -> list[TextContent]:
+        logger.info(f"_compare_series called: {arguments}")
         """Compare two time series"""
         args = CompareSeriesInput(**arguments)
 
@@ -372,7 +382,7 @@ Analyzes similarities, differences, and intervals of divergence.""",
 
         output += f"\n## LLM Analysis\n\n"
         output += llm_response
-
+        logger.info(output)
         return [TextContent(type="text", text=output)]
 
     def _infer_task_type(self, question: str) -> str:
@@ -398,13 +408,14 @@ Analyzes similarities, differences, and intervals of divergence.""",
 
     async def _call_llm(self, prompt: str) -> str:
         response = await self.client.chat.completions.create(
-            model="gpt-4o",
+            model="anthropic/claude-sonnet-4.5",
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}]
         )
         logger.info(f"LLM Prompt (first 200 chars): {prompt[:200]}...")
-
-        return response.choices[0].message.content
+        ret = response.choices[0].message.content
+        logger.info(f"LLM Response (first 200 chars): {ret}")
+        return ret
 
     def _parse_response(self, response: str, task_type: TaskType) -> Dict:
         """Parse LLM response based on task type"""

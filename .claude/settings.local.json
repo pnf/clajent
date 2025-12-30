@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(clj-nrepl-eval:*)"
+      "Bash(clj-nrepl-eval:*)",
+      "Bash(python:*)",
+      "Bash(timeout 60 python:*)",
+      "Bash(cat:*)",
+      "Bash(tee:*)"
     ]
   }
 }

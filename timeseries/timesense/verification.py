@@ -7,6 +7,9 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from preprocessing import TimeSeriesData
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -88,6 +91,8 @@ class TimeSeriesVerifier:
             is_valid = False
             message = f"✗ Both index and value incorrect"
 
+        logger.info(f"Extreme verification: {message}")
+
         return VerificationResult(
             is_valid=is_valid,
             confidence=confidence,
@@ -142,6 +147,8 @@ class TimeSeriesVerifier:
             message = f"✓ Good spike detection (F1: {f1_score:.2f})"
         else:
             message = f"✗ Poor spike detection (F1: {f1_score:.2f})"
+
+        logger.info(f"Spike verification: {message}")
 
         return VerificationResult(
             is_valid=is_valid,
@@ -207,7 +214,7 @@ class TimeSeriesVerifier:
                 is_valid = True  # Accept as valid with lower confidence
 
         message = f"{'✓' if is_valid else '✗'} Predicted: {predicted_normalized}, Actual: {actual_trend} (slope: {slope:.4f}, volatility: {volatility:.2f})"
-
+        logger.info(f"Trend verification: {message}")
         return VerificationResult(
             is_valid=is_valid,
             confidence=confidence,
@@ -259,7 +266,7 @@ class TimeSeriesVerifier:
         confidence = f1_score
 
         message = f"{'✓' if is_valid else '✗'} Change points - Precision: {precision:.2f}, Recall: {recall:.2f}, F1: {f1_score:.2f}"
-
+        logger.info(f"Change point verification: {message}")
         return VerificationResult(
             is_valid=is_valid,
             confidence=confidence,
@@ -290,7 +297,7 @@ class TimeSeriesVerifier:
         confidence = max(0.0, 1.0 - relative_error * 2)  # Linear decay
 
         message = f"{'✓' if is_valid else '✗'} Value at index {index}: predicted {predicted_value:.4f}, actual {actual_value:.4f} (error: {relative_error:.1%})"
-
+        logger.info(f"Value at index verification: {message}")
         return VerificationResult(
             is_valid=is_valid,
             confidence=confidence,
@@ -349,7 +356,7 @@ class TimeSeriesVerifier:
         confidence = min(1.0, avg_score * 2)
 
         message = f"{'✓' if is_valid else '✗'} Anomaly detection - {len(predicted_intervals)} intervals, avg anomaly ratio: {avg_score:.2f}"
-
+        logger.info(f"Anomaly detection verification: {message}")
         return VerificationResult(
             is_valid=is_valid,
             confidence=confidence,
