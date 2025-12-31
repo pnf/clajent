@@ -10,5 +10,6 @@
                  [clj-http "3.13.0"]
                  [clj-python/libpython-clj "2.026"]
                  [org.jfree/jfreechart "1.5.4"]
+                 [babashka/fs "0.5.30"]
                  ]
   :repl-options {:init-ns clajent.core})
