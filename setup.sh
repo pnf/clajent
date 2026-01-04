@@ -302,12 +302,12 @@ echo ""
 echo "=== Configuring python.edn ==="
 
 cat > python.edn << EOF
-{:python-executable "$SCRIPT_DIR/venv/bin/python"
+{:python-executable "./venv/bin/python"
  :python-verbose true
  }
 EOF
 
-print_status "python.edn configured with venv path: $SCRIPT_DIR/venv/bin/python"
+print_status "python.edn configured with venv path: ./venv/bin/python"
 
 # ============================================================================
 # Install Clojure Dependencies
