@@ -10,13 +10,13 @@ import logging
 from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
+import os
 logging
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
-from ignore_me_secrets import OPEN_ROUTER_KEY
 
 from preprocessing import TimeSeriesData, TimeSeriesPreprocessor
 from encoder import TimeSeriesEncoder, create_task_specific_encoding
@@ -404,7 +404,7 @@ Analyzes similarities, differences, and intervals of divergence.""",
         else:
             return "describe"
 
-    client = AsyncOpenAI(api_key=OPEN_ROUTER_KEY, base_url="https://openrouter.ai/api/v1")
+    client = AsyncOpenAI(api_key=os.getenv("OPEN_ROUTER_KEY"), base_url="https://openrouter.ai/api/v1")
 
     async def _call_llm(self, prompt: str) -> str:
         response = await self.client.chat.completions.create(

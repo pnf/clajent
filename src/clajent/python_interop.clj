@@ -18,11 +18,14 @@
 
 ;; We need to create dataframes for fake time-series with interesting features
 
-(require-python  "/Users/pnf/dev/clajent/timeseries/tsuting" '[timeseries :reload :as ts] )
+;; Use relative paths from project root
+(def project-root (System/getProperty "user.dir"))
 
-(require-python  "/Users/pnf/dev/clajent/timeseries/timesense" '[basic_usage :reload :as bu] )
+(require-python  (str project-root "/timeseries/tsuting") '[timeseries :reload :as ts] )
 
-(require-python  "/Users/pnf/dev/clajent/timeseries/timesense" '[server :reload :as sv] )
+(require-python  (str project-root "/timeseries/timesense") '[basic_usage :reload :as bu] )
+
+(require-python  (str project-root "/timeseries/timesense") '[server :reload :as sv] )
 
 (def er (bu/get_example_requests))
 
