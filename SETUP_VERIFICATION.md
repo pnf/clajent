@@ -44,7 +44,7 @@ The `setup.sh` script was thoroughly tested and verified. The script successfull
 - **Test**: All imports successful
 
 ### ✅ Configuration
-- **python.edn**: Correctly configured with absolute path `/home/user/clajent/venv/bin/python`
+- **python.edn**: Correctly configured with relative path `./venv/bin/python` (portable across machines)
 - **PATH**: `~/.local/bin` available in PATH
 
 ### ✅ Clojure Dependencies
@@ -79,6 +79,17 @@ The setup script was run multiple times to verify idempotency:
 - ✅ Updates configuration files (python.edn) with correct paths
 - ✅ Re-installs Python dependencies (safe operation)
 - ✅ Re-downloads Clojure dependencies (safe operation)
+
+## Improvements Made
+
+### Fixed: Portable Path Configuration
+**Issue**: Initial version of setup script generated `python.edn` with absolute paths (e.g., `/home/user/clajent/venv/bin/python`), making the configuration file non-portable across different machines.
+
+**Solution**: Updated `setup.sh` to use relative paths (`./venv/bin/python`) instead. This allows the repository to be cloned anywhere and work correctly.
+
+**Files Modified**:
+- `setup.sh` (line 305): Changed from `$SCRIPT_DIR/venv/bin/python` to `./venv/bin/python`
+- `python.edn`: Uses relative path for portability
 
 ## Recommendations
 
