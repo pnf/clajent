@@ -12,7 +12,7 @@
   )
 
 (def client (.. OpenAIOkHttpClient (builder)
-                (apiKey (System/getenv "OPEN_ROUTER_KEY"))
+                (apiKey (clajent.keys/get "OPEN_ROUTER_KEY"))
                 (baseUrl "https://openrouter.ai/api/v1")
                 (build)))
 

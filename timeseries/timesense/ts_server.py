@@ -22,6 +22,7 @@ from preprocessing import TimeSeriesData, TimeSeriesPreprocessor
 from encoder import TimeSeriesEncoder, create_task_specific_encoding
 from prompts import PromptBuilder, TaskType, ResponseParser
 from verification import TimeSeriesVerifier
+from keys import get_api_key
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -404,7 +405,11 @@ Analyzes similarities, differences, and intervals of divergence.""",
         else:
             return "describe"
 
-    client = AsyncOpenAI(api_key=os.getenv("OPEN_ROUTER_KEY"), base_url="https://openrouter.ai/api/v1")
+    @property
+    def client(self) -> AsyncOpenAI:
+        if not hasattr(self, '_client'):
+            self._client = AsyncOpenAI(api_key=get_api_key(), base_url="https://openrouter.ai/api/v1")
+        return self._client
 
     async def _call_llm(self, prompt: str) -> str:
         response = await self.client.chat.completions.create(
