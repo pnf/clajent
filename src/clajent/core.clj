@@ -1,5 +1,6 @@
 (ns clajent.core
   (:require    [clojure.data.json :as json]
+               [clajent.keys]
                [gigasquid.plot :as gplot]
                )
   (:import [com.openai.client.okhttp OpenAIOkHttpClient]
