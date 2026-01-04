@@ -8,7 +8,7 @@
 ; security find-generic-password -s OPENAI_API_KEY -a "$(whoami)" -w | pbcopy
 
 (defn get [^String k]
-  (or (:out (System/getenv k))
+  (or (System/getenv k)
       (-> (sh/sh "security" "find-generic-password" "-s" k "-a" (System/getProperty "user.name") "-w")
           :out
           s/trim)
