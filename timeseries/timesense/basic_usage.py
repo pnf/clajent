@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import ts_server as tss
 import asyncio
 from openai import OpenAI, AsyncOpenAI
-from ignore_me_secrets import OPEN_ROUTER_KEY
+import os
 import json
 import logging
 
@@ -132,7 +132,7 @@ logging.basicConfig(level=logging.INFO)
 
 server = tss.TimeSeriesMCPServer()
 
-client = AsyncOpenAI(api_key=OPEN_ROUTER_KEY, base_url="https://openrouter.ai/api/v1")
+client = AsyncOpenAI(api_key=os.getenv("OPEN_ROUTER_KEY"), base_url="https://openrouter.ai/api/v1")
 
 # Define MCP tools in OpenAI function calling format
 # Note: We simplify by not requiring series data in parameters - it will be provided from context

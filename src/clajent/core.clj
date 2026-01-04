@@ -1,6 +1,5 @@
 (ns clajent.core
   (:require    [clojure.data.json :as json]
-               [clajent.ignore-me-secrets :as secrets]
                [gigasquid.plot :as gplot]
                )
   (:import [com.openai.client.okhttp OpenAIOkHttpClient]
@@ -13,7 +12,7 @@
   )
 
 (def client (.. OpenAIOkHttpClient (builder)
-                (apiKey secrets/open-router-token)
+                (apiKey (System/getenv "OPEN_ROUTER_KEY"))
                 (baseUrl "https://openrouter.ai/api/v1")
                 (build)))
 
