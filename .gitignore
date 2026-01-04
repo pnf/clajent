@@ -16,3 +16,14 @@ pom.xml.asc
 .hgignore
 .hg/
 .idea/
+
+# Secrets and credentials (NEVER commit these)
+.env
+.env.local
+.env.*.local
+secrets.env
+credentials.json
+api-keys.json
+*.pem
+*.key
+.claude/secrets.env
