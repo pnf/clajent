@@ -165,14 +165,26 @@
 
 (defn- extract-line-value
   "Extract the Y position of the line at a given X coordinate within a region.
-  Scans vertically from top to find the first dark pixel.
+  Scans vertically to find dark pixels, skipping the top/bottom borders.
   Returns normalized value (0 = bottom, 1 = top), or nil if no line found."
   [^BufferedImage img x y-min y-max threshold]
-  (let [;; Scan from top to bottom
-        y-range (range (int y-min) (int (inc y-max)))]
-    (when-let [line-y (first (filter #(is-dark-pixel? img x % threshold) y-range))]
-      ;; Normalize: 0 at bottom, 1 at top
-      (let [normalized (/ (- y-max line-y) (- y-max y-min))]
+  (let [;; Add margin to skip grid borders (top/bottom ~5% of region)
+        margin (* 0.05 (- y-max y-min))
+        scan-y-min (+ y-min margin)
+        scan-y-max (- y-max margin)
+
+        ;; Scan from top to bottom within the region (excluding borders)
+        y-range (range (int scan-y-min) (int (inc scan-y-max)))
+
+        ;; Find ALL dark pixels in this vertical line
+        dark-pixels (filter #(is-dark-pixel? img x % threshold) y-range)]
+
+    (when (seq dark-pixels)
+      ;; Take the middle dark pixel (or first if only one)
+      ;; This helps skip horizontal grid lines that might exist
+      (let [line-y (nth dark-pixels (quot (count dark-pixels) 2))
+            ;; Normalize: 0 at bottom, 1 at top
+            normalized (/ (- y-max line-y) (- y-max y-min))]
         (max 0.0 (min 1.0 normalized))))))
 
 (defn- sample-line-in-region
