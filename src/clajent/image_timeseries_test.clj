@@ -77,7 +77,7 @@
   "Run the extraction test on the uploaded graph image.
   This function demonstrates the full workflow from image to visualization."
   []
-  (let [input-image "resources/test-images/hand-drawn-graphs.jpg"
+  (let [input-image "resources/test-images/hand-drawn-graphs.png"
         output-image "resources/test-images/extracted-graphs.png"
         start-time "2025-01-01T00:00:00Z"
         end-time "2025-01-01T23:59:59Z"
