@@ -90,13 +90,13 @@
         [tl tr bl br] sorted
 
         ;; Check if top two dots are at similar Y
-        top-y-diff (Math/abs (- (:y tl) (:y tr)))
+        top-y-diff (Math/abs (double (- (:y tl) (:y tr))))
         ;; Check if bottom two dots are at similar Y
-        bottom-y-diff (Math/abs (- (:y bl) (:y br)))
+        bottom-y-diff (Math/abs (double (- (:y bl) (:y br))))
         ;; Check if left two dots are at similar X
-        left-x-diff (Math/abs (- (:x tl) (:x bl)))
+        left-x-diff (Math/abs (double (- (:x tl) (:x bl))))
         ;; Check if right two dots are at similar X
-        right-x-diff (Math/abs (- (:x tr) (:x br)))
+        right-x-diff (Math/abs (double (- (:x tr) (:x br))))
 
         ;; Check if it forms a reasonable sized rectangle
         width (- (max (:x tr) (:x br)) (min (:x tl) (:x bl)))
@@ -111,21 +111,43 @@
 
 (defn- find-rectangular-regions
   "Find rectangular regions bounded by 4 dots in the image.
-  Uses combinatorial approach to find all valid rectangles."
+  Uses optimized spatial approach to find rectangles efficiently."
   [dots]
-  (let [regions (atom [])
-        n (count dots)
-        tolerance 30] ;; pixels tolerance for alignment
+  (let [;; Filter to keep only larger clusters (likely corner dots)
+        ;; Take top 20% by size to reduce search space more aggressively
+        sorted-dots (reverse (sort-by :size dots))
+        threshold-size (if (> (count sorted-dots) 30)
+                        (:size (nth sorted-dots (quot (count sorted-dots) 5)))
+                        (if (> (count sorted-dots) 0)
+                          (:size (nth sorted-dots (min 20 (dec (count sorted-dots)))))
+                          0))
+        filtered-dots (take 60 (filter #(>= (:size %) threshold-size) sorted-dots))
+        _ (println "Filtered to" (count filtered-dots) "larger clusters")
+        _ (when (seq filtered-dots)
+            (println "Cluster size range:" (:size (first filtered-dots)) "to" (:size (last filtered-dots))))
 
-    ;; Try all combinations of 4 dots
-    (doseq [i (range n)
-            j (range (inc i) n)
-            k (range (inc j) n)
-            l (range (inc k) n)]
-      (let [d1 (nth dots i)
-            d2 (nth dots j)
-            d3 (nth dots k)
-            d4 (nth dots l)]
+        regions (atom [])
+        n (count filtered-dots)
+        tolerance 50
+        max-distance 1000] ;; Max pixels between dots in a rectangle
+
+    ;; Only try combinations if we have a reasonable number of dots
+    (when (<= n 200)
+      ;; Try all combinations of 4 dots
+      (doseq [i (range n)
+              j (range (inc i) n)
+              :let [d1 (nth filtered-dots i)
+                    d2 (nth filtered-dots j)]
+              :when (< (distance d1 d2) max-distance)
+              k (range (inc j) n)
+              :let [d3 (nth filtered-dots k)]
+              :when (and (< (distance d1 d3) max-distance)
+                        (< (distance d2 d3) max-distance))
+              l (range (inc k) n)
+              :let [d4 (nth filtered-dots l)]
+              :when (and (< (distance d1 d4) max-distance)
+                        (< (distance d2 d4) max-distance)
+                        (< (distance d3 d4) max-distance))]
         (when (dots-form-rectangle? d1 d2 d3 d4 tolerance)
           (let [sorted (sort-by (juxt :y :x) [d1 d2 d3 d4])
                 [tl tr bl br] sorted]

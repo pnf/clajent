@@ -42,11 +42,11 @@
          (println (format "  Valid points: %d" (count non-nil-values)))
          (println (format "  Missing points: %d" nil-count))
          (when (seq non-nil-values)
-           (println (format "  Min value: %.3f" (apply min non-nil-values)))
-           (println (format "  Max value: %.3f" (apply max non-nil-values)))
+           (println (format "  Min value: %.3f" (double (apply min non-nil-values))))
+           (println (format "  Max value: %.3f" (double (apply max non-nil-values))))
            (println (format "  Mean value: %.3f"
-                           (/ (reduce + non-nil-values)
-                              (count non-nil-values)))))
+                           (double (/ (reduce + non-nil-values)
+                                     (count non-nil-values))))))
          (println)))
 
      ;; Create visualization if we have any series
