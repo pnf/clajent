@@ -11,7 +11,7 @@
            [java.util Date Locale TimeZone]
            [javax.swing JFrame]))
 
-(defn- parse-time
+(defn parse-time
   "Parse a time value into a java.util.Date.
   Accepts:
   - java.util.Date (returned as-is)
