@@ -1,13 +1,11 @@
 (ns example.core
   "Example namespace demonstrating Clojure + Python/pandas interoperability."
-  (:require [libpython-clj2.python :refer [py. py.. py.-] :as py]
-            [libpython-clj2.require :refer [require-python]]))
+  (:require [libpython-clj2.python :refer [py. py.. py.-] :as py]))
 
 ;; ============================================================================
 ;; Python Initialization
 ;; ============================================================================
 
-;; Initialize Python runtime (call once at startup)
 (defn init-python!
   "Initialize the Python runtime. Call this before using any Python interop."
   []
@@ -25,8 +23,8 @@
                         :age [25 30 35]
                         :city [\"NYC\" \"LA\" \"SF\"]})"
   [data-map]
-  (require-python '[pandas :as pd])
-  (pd/DataFrame data-map))
+  (let [pd (py/import-module "pandas")]
+    (py. pd DataFrame data-map)))
 
 (defn df->clj
   "Convert a pandas DataFrame to a Clojure vector of maps.
@@ -52,19 +50,19 @@
    Example:
      (create-array [1 2 3 4 5])"
   [coll]
-  (require-python '[numpy :as np])
-  (np/array coll))
+  (let [np (py/import-module "numpy")]
+    (py. np array coll)))
 
 (defn array-stats
   "Get basic statistics for a numpy array.
    Returns map with :sum, :mean, :std, :min, :max."
   [arr]
-  (require-python '[numpy :as np])
-  {:sum  (py. (np/sum arr) __float__)
-   :mean (py. (np/mean arr) __float__)
-   :std  (py. (np/std arr) __float__)
-   :min  (py. (np/min arr) __float__)
-   :max  (py. (np/max arr) __float__)})
+  (let [np (py/import-module "numpy")]
+    {:sum  (double (py. np sum arr))
+     :mean (double (py. np mean arr))
+     :std  (double (py. np std arr))
+     :min  (double (py. np min arr))
+     :max  (double (py. np max arr))}))
 
 ;; ============================================================================
 ;; Demo Function
@@ -79,9 +77,9 @@
 
   ;; DataFrame demo
   (println "1. Creating pandas DataFrame:")
-  (let [df (create-dataframe {:name  ["Alice" "Bob" "Carol" "David"]
-                              :age   [25 30 35 40]
-                              :score [85.5 92.0 78.5 95.0]})]
+  (let [df (create-dataframe {"name"  ["Alice" "Bob" "Carol" "David"]
+                              "age"   [25 30 35 40]
+                              "score" [85.5 92.0 78.5 95.0]})]
     (println df)
     (println "\n2. DataFrame statistics:")
     (println (describe-df df))
