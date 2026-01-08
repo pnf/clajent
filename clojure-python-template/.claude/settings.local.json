@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(clj-nrepl-eval:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Skill(clojure-eval)"
+    ]
+  }
+}

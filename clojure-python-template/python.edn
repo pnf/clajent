@@ -1,0 +1,2 @@
+{:python-executable "./venv/bin/python"
+ :python-verbose true}
