@@ -11,5 +11,6 @@
                  [clj-python/libpython-clj "2.026"]
                  [org.jfree/jfreechart "1.5.4"]
                  [babashka/fs "0.5.30"]
+                 [clj-delegate "0.1.9"]
                  ]
   :repl-options {:init-ns clajent.core})

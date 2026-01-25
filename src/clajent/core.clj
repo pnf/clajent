@@ -1,16 +1,27 @@
 (ns clajent.core
   (:require    [clojure.data.json :as json]
-               [clajent.keys]
-               [gigasquid.plot :as gplot]
-               )
+               [clajent.keys])
   (:import [com.openai.client.okhttp OpenAIOkHttpClient]
            [com.openai.core JsonValue ObjectMappers]
+           (com.openai.errors BadRequestException)
            [com.openai.models.responses Response ResponseCreateParams ResponseCreateParams$Builder ResponseCreateParams$Input ResponseFunctionToolCall
                                         ResponseInputItem ResponseInputItem$FunctionCallOutput ResponseInputItem$Message ResponseInputItem$Message$Role Tool FunctionTool FunctionTool$Parameters]
            [com.openai.core ObjectMappers JsonValue]
            [com.openai.models Reasoning Reasoning$Summary Reasoning$Summary$Companion ReasoningEffort]
-           (java.util Optional))
+           (java.util Optional)
+           )
   )
+
+(defn oget [^Optional opt]
+  "Optional -> truthy."
+  (if (.isPresent opt) (.get opt) nil))
+(defn from-java-coll [java-collection] (into [] java-collection))
+(defn flat-mop [opt-coll] (filter some? (map oget opt-coll)))
+(defn not-empty? [coll] (not (empty? coll)))
+(defrecord FT [name params impl tool])
+(defrecord Param [name tpe description])
+
+
 
 (def client (.. OpenAIOkHttpClient (builder)
                 (apiKey (clajent.keys/get "OPEN_ROUTER_KEY"))
@@ -45,46 +56,69 @@
                                (#(.putAdditionalProperty % "additionalProperties" (jv false)))
                                (.build)))
 
-(defn tool [name desc & args]
+(defn function-tool [fname f desc &
+            [ arg-name arg-tpe arg-desc & more-args]]
   "Create a tool. Each argument is a triplet vector [arg-name type description]."
-  (Tool/ofFunction
-    (.. (FunctionTool/builder)
-        (name name)
-        (description desc)
-        (parameters  (fn-parameters
-                      "type" (jv "object")
-                      ; Build the function argument map
-                      "properties" (jv (reduce (fn [props [nme tpe desc]]
-                                                 (assoc props nme {"type" tpe "description" desc})) {} args))
-                      "required" (jv (map first args))
-                      ))
-        (strict true)
-        (build))))
+  (let [
+        params (map #(apply ->Param %)(partition 3 (concat (and arg-name [arg-name arg-tpe arg-desc]) more-args)))
+        ft (FT. fname  params f
+             (Tool/ofFunction
+               (.. (FunctionTool/builder)
+                   (name fname)
+                   (description desc)
+                   (parameters (fn-parameters
+                                 "type" (jv "object")
+                                 ; Build the function argument map
+                                 "properties" (jv (reduce (fn [props {nme :name tpe :tpe desc :description }]
+                                                            (assoc props nme {"type" (name tpe) "description" desc}))
+                                                          {} params))
+                                 "required" (jv (map :name params))
+                                 ))
+                   (strict true)
+                   (build))) )
+        ]
+    ft
+    ))
 
-(def call-function-tool (tool "call-function" "calls a function" ["x" "number" "blah"]))
+(defn to-tool-box [& fts]
+  (reduce (fn [h ft] (assoc h (:name ft) (:tool ft)) ) {} fts)
+  )
 
-(defn dispatch [^ResponseFunctionToolCall fn]
-  (case (.name fn)
-    "call-function" (let [args (jv (.readTree (ObjectMappers/jsonMapper) (.arguments fn)))
-                          x (double (-> args (.values) (.get "x") (.value)))]
-                     (println "Evaluating for " x)
-                     (json/write-str { :x (Math/sin x)})
-                     )))
+(defn mystery [x]
+  (Math/sin x))
 
-(defn oget [^Optional opt]
-  "Optional -> truthy."
-  (if (.isPresent opt) (.get opt) nil))
-(defn from-java-coll [java-collection] (into [] java-collection))
-(defn flat-mop [opt-coll] (filter some? (map oget opt-coll)))
-(defn not-empty? [coll] (not (empty? coll)))
+(def call-function-tool (function-tool "call-function" mystery "calls a function"
+                                       "x" :number "mystery parameter"))
+(def resp (atom nil))
 
 
-(defn process [initial-prommpt tools]
-  (loop [context [(user-prompt initial-prommpt)]]
-    (let [builder (.input (reduce #(.addTool %1 %2) (newParamsBuilder) tools)
+(defn dispatch [tools  ^ResponseFunctionToolCall ftc]
+  (reset! resp ftc)
+  (let [arg-map (-> ftc .arguments json/read-str)
+        nme (.name ftc)
+        ft (some #(if (= (:name %) nme) %)  tools)
+        {params :params fn :impl} ft
+        args (map #(get arg-map (:name %)) params)
+        _ (println "Evaluating:" nme args)
+        res (apply fn args)
+        _ (println "   -->" res)
+        ]
+    (json/write-str res)
+    )
+  )
+
+
+(defn process [initial-prompt tools]
+  (loop [context [(user-prompt initial-prompt)]]
+    (let [builder (.input (reduce #(.addTool %1 %2)
+                                  (newParamsBuilder)
+                                  (map :tool tools))
                           (ResponseCreateParams$Input/ofResponse context))
           _ (println "Thinking ...")
-          ^Response response (-> client (.responses) (.create (.build builder)))
+          ^Response response (try (-> client (.responses) (.create (.build builder))) (catch BadRequestException e
+                                                                                        (println "Error" (.body e))
+                                                                                        (throw e)
+                                                                                        ))
           output-items (.output response)
           reasoning-ctx (->> output-items (map #(.reasoning %)) (flat-mop) (map ResponseInputItem/ofReasoning) )
           function-calls (->> output-items (map #(.functionCall %)) (flat-mop))
@@ -93,9 +127,10 @@
                                         (ResponseInputItem/ofFunctionCallOutput
                                           (.. (ResponseInputItem$FunctionCallOutput/builder)
                                               (callId (.callId fc))
-                                              (output (dispatch fc))
+                                              (output (dispatch tools fc))
                                               (build)))]
                                        ) function-calls))
+
           output-messages  (->> output-items (map #(.message %)) (flat-mop))
           msg-context (map ResponseInputItem/ofResponseOutputMessage output-messages)
           to-print (->> output-messages (map #(from-java-coll (.content %))) (flatten)
@@ -108,7 +143,12 @@
           ]
       (if (or (not-empty? input-ctx) (not-empty? function-ctx))
         (recur (concat context reasoning-ctx function-ctx msg-context input-ctx)))
-      )))
+      ))
+  (println "Done")
+  )
 
-(defn go []
-       (process "Figure out what function is implemented by the call-function tool, by testing it for multiple values", [call-function-tool]))
+(def tools [call-function-tool])
+
+(defn do-it [] (process "Figure out what the mystery tool does" tools))
+
+(do-it)
